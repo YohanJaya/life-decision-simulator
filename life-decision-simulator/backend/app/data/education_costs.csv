@@ -1,0 +1,22 @@
+program_type,country,tuition_usd_yr,living_usd_yr,source
+ms_cs,usa,28000,18000,NCES IPEDS 2023 avg grad tuition + Numbeo 2023
+ms_cs,germany,800,13000,DAAD 2023 (semester fee ~€250×2) + Numbeo Munich 2023
+ms_cs,canada,18000,14500,CBIE 2023 avg international + Numbeo Toronto 2023
+ms_cs,uk,24000,17000,UKCISA 2023 avg PGT + Numbeo London 2023
+ms_cs,australia,22000,18000,Study in Australia 2023 + Numbeo Sydney 2023
+ms_cs,netherlands,12000,13000,Nuffic 2023 avg EU/non-EU + Numbeo Amsterdam 2023
+ms_cs,singapore,18000,21000,NUS/NTU 2023 intl tuition + Numbeo Singapore 2023
+ms_data_science,usa,30000,18000,NCES IPEDS 2023 + Numbeo 2023
+ms_data_science,germany,1200,13000,DAAD 2023 + Numbeo 2023
+ms_data_science,uk,25000,17000,UKCISA 2023 + Numbeo London 2023
+ms_data_science,canada,20000,14500,CBIE 2023 + Numbeo Toronto 2023
+ms_ai,usa,32000,18000,NCES IPEDS 2023 (specialized programs) + Numbeo 2023
+ms_ai,uk,27000,17000,UKCISA 2023 + Numbeo London 2023
+ms_ai,canada,21000,14500,CBIE 2023 + Numbeo Toronto 2023
+ms_ee,usa,26000,18000,NCES IPEDS 2023 + Numbeo 2023
+ms_ee,germany,600,13000,DAAD 2023 + Numbeo 2023
+mba,usa,50000,22000,US News MBA Rankings 2023 avg top-50 + Numbeo 2023
+mba,india,8000,4000,IIM fee schedule 2023 (INR→USD at 83) + Numbeo Bangalore 2023
+bootcamp_software,usa,15000,0,Course Report 2023 avg bootcamp cost (no separate living)
+bootcamp_data_science,usa,14000,0,Course Report 2023 avg bootcamp cost
+ms_cs,sweden,13000,14000,Study in Sweden 2023 (SEK→USD at 0.095) + Numbeo Stockholm 2023

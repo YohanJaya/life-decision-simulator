@@ -1,0 +1,27 @@
+role,region,level,p25,p50,p75,source,year
+software_engineer,usa,entry,88000,105000,125000,BLS OES 15-1252 (May 2023),2023
+software_engineer,usa,mid,115000,140000,168000,BLS OES 15-1252 (May 2023),2023
+software_engineer,usa,senior,150000,185000,225000,BLS OES 15-1252 + Levels.fyi 2023,2023
+software_engineer,germany,entry,44000,54000,65000,StepStone Gehaltsreport 2023 (EUR→USD at 1.09),2023
+software_engineer,germany,mid,56000,70000,86000,StepStone Gehaltsreport 2023 (EUR→USD at 1.09),2023
+software_engineer,germany,senior,72000,90000,110000,StepStone Gehaltsreport 2023 (EUR→USD at 1.09),2023
+software_engineer,canada,entry,60000,74000,89000,Statistics Canada 2023 (CAD→USD at 0.74),2023
+software_engineer,canada,mid,82000,98000,118000,Statistics Canada 2023 (CAD→USD at 0.74),2023
+software_engineer,canada,senior,108000,130000,156000,Statistics Canada 2023 (CAD→USD at 0.74),2023
+software_engineer,uk,entry,36000,46000,56000,ONS ASHE 2023 (GBP→USD at 1.27),2023
+software_engineer,uk,mid,50000,63000,78000,ONS ASHE 2023 (GBP→USD at 1.27),2023
+software_engineer,uk,senior,66000,83000,102000,ONS ASHE 2023 (GBP→USD at 1.27),2023
+software_engineer,australia,entry,55000,68000,82000,SEEK Salary Insights 2023 (AUD→USD at 0.65),2023
+software_engineer,australia,mid,78000,95000,115000,SEEK Salary Insights 2023 (AUD→USD at 0.65),2023
+software_engineer,india,entry,9500,14000,21000,Glassdoor India 2023 (INR→USD at 83),2023
+software_engineer,india,mid,17000,25000,37000,Glassdoor India 2023 (INR→USD at 83),2023
+data_scientist,usa,entry,82000,98000,118000,BLS OES 15-2051 (May 2023),2023
+data_scientist,usa,mid,108000,130000,157000,BLS OES 15-2051 (May 2023),2023
+data_scientist,usa,senior,142000,172000,208000,BLS OES 15-2051 + Levels.fyi 2023,2023
+ml_engineer,usa,entry,95000,115000,138000,Levels.fyi ML Engineer 2023,2023
+ml_engineer,usa,mid,130000,158000,192000,Levels.fyi ML Engineer 2023,2023
+ml_engineer,usa,senior,170000,210000,260000,Levels.fyi ML Engineer 2023,2023
+product_manager,usa,mid,115000,140000,168000,Glassdoor PM US 2023,2023
+product_manager,usa,senior,148000,180000,220000,Glassdoor PM US 2023,2023
+software_engineer,netherlands,entry,42000,52000,63000,CBS Netherlands 2023 (EUR→USD at 1.09),2023
+software_engineer,netherlands,mid,55000,68000,82000,CBS Netherlands 2023 (EUR→USD at 1.09),2023

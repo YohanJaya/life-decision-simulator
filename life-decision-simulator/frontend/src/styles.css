@@ -1,0 +1,126 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --border: #2e3347;
+  --text: #e2e8f0;
+  --muted: #8892a4;
+  --accent: #6c8ef7;
+  --green: #4ade80;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --radius: 8px;
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.app-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+}
+
+.tagline {
+  color: var(--muted);
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Status card */
+.status-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.95rem;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.status-ok .status-dot    { background: var(--green); }
+.status-error .status-dot { background: var(--red); }
+.status-checking .status-dot { background: var(--yellow); animation: pulse 1s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.milestone-notice {
+  padding: 1.5rem 2rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+/* Generic card */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 100%;
+}
+
+/* Confidence badges */
+.badge {
+  display: inline-block;
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-high   { background: #14532d; color: #86efac; }
+.badge-medium { background: #713f12; color: #fde68a; }
+.badge-low    { background: #7f1d1d; color: #fca5a5; }
+
+/* Tradeoff score chips */
+.score-strong  { color: var(--green); }
+.score-mixed   { color: var(--yellow); }
+.score-weak    { color: var(--red); }
+.score-unclear { color: var(--muted); }

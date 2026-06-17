@@ -1,7 +1,0 @@
-field,median_salary,p25_salary,p75_salary,job_count
-Software Engineering,95000,75000,120000,125000
-Data Science,90000,70000,110000,95000
-Product Management,88000,65000,105000,75000
-Finance,85000,60000,100000,110000
-Healthcare,72000,50000,90000,220000
-Education,55000,40000,70000,180000
