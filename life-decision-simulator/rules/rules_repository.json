@@ -1,0 +1,26 @@
+{
+  "rules": [
+    {
+      "name": "high_earning_potential",
+      "description": "Identifies career paths with high earning potential",
+      "conditions": {
+        "field": "salary_outcomes",
+        "threshold": 75000
+      },
+      "output": "salary_tier"
+    },
+    {
+      "name": "job_availability",
+      "description": "Evaluates job availability in a field",
+      "conditions": {
+        "field": "employment_rates",
+        "threshold": 0.8
+      },
+      "output": "job_tier"
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2026-06-17"
+  }
+}

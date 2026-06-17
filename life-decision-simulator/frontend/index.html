@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Decision Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .input-section {
+            margin: 20px 0;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .results {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Life Decision Simulator</h1>
+        <p>Explore career paths, decisions, and their potential outcomes.</p>
+        
+        <div class="input-section">
+            <h2>Your Profile</h2>
+            <input type="text" id="name" placeholder="Your name">
+            <input type="number" id="age" placeholder="Your age">
+            <select id="education">
+                <option value="">Select education level</option>
+                <option value="high_school">High School</option>
+                <option value="bachelors">Bachelor's Degree</option>
+                <option value="masters">Master's Degree</option>
+                <option value="phd">PhD</option>
+            </select>
+            <input type="text" id="current_field" placeholder="Current field of work">
+        </div>
+
+        <div class="input-section">
+            <h2>Decision Context</h2>
+            <textarea id="decision_description" placeholder="Describe the decision you're facing..."></textarea>
+            <select id="decision_type">
+                <option value="">Select decision type</option>
+                <option value="career_change">Career Change</option>
+                <option value="location_move">Location Move</option>
+                <option value="education">Further Education</option>
+                <option value="entrepreneurship">Entrepreneurship</option>
+            </select>
+        </div>
+
+        <button onclick="submitSimulation()">Run Simulation</button>
+
+        <div id="results" class="results" style="display:none;">
+            <h3>Results</h3>
+            <pre id="resultsContent"></pre>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
