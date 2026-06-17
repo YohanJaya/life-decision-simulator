@@ -9,6 +9,7 @@ from ..state import SessionState
 from ..schemas import ResearchResult, ResearchBullet, QuantResult, FinancialProjection
 from ..llm import chat_json_validated
 from ..tools.web_search import async_search
+from ..tools.retriever import ScenarioIndex
 
 QUERY_PROMPT = """\
 You are a research strategist. Given a decision scenario and user profile, generate 6 focused
@@ -87,6 +88,13 @@ class ResearchOutput(AgentOutput):
     quant_results: list[QuantResult]
 
 
+def _fmt_chunks(chunks: list[dict]) -> str:
+    return "\n\n".join(
+        f"Title: {c['title']}\nURL: {c['url']}\nContent: {c['content']}"
+        for c in chunks
+    ) or "No search results available."
+
+
 class ResearchAgent(BaseAgent):
     name = "research"
 
@@ -96,7 +104,7 @@ class ResearchAgent(BaseAgent):
         profile_json = profile.model_dump_json(indent=2)
         scenario_json = scenario.model_dump_json(indent=2)
 
-        # Step 1: generate both qualitative and quantitative queries
+        # Step 1: generate 6 targeted queries
         queries = await chat_json_validated(
             messages=[
                 {"role": "system", "content": QUERY_PROMPT},
@@ -113,9 +121,9 @@ class ResearchAgent(BaseAgent):
             temperature=0.4,
         )
 
-        # Step 2: run all 6 searches concurrently
+        # Step 2: run all 6 searches with 12 results each, concurrently
         all_queries = queries.qualitative + queries.quantitative
-        search_tasks = [async_search(q, max_results=4) for q in all_queries]
+        search_tasks = [async_search(q, max_results=12) for q in all_queries]
         all_results = await asyncio.gather(*search_tasks)
 
         def _dedup(batches: list[list[dict]]) -> list[dict]:
@@ -128,17 +136,28 @@ class ResearchAgent(BaseAgent):
                         out.append(r)
             return out
 
-        qual_results = _dedup(all_results[:3])
-        quant_results_raw = _dedup(all_results[3:])
+        qual_raw = _dedup(all_results[:3])   # up to 36 results
+        quant_raw = _dedup(all_results[3:])  # up to 36 results
 
-        def _fmt(results: list[dict], limit: int = 10) -> str:
-            return "\n\n".join(
-                f"Title: {r['title']}\nURL: {r['url']}\nContent: {r['content'][:500]}"
-                for r in results[:limit]
-            ) or "No search results available."
+        # Step 3: index both pools into their own ChromaDB collections
+        qual_index  = ScenarioIndex(f"{scenario.id}_qual")
+        quant_index = ScenarioIndex(f"{scenario.id}_quant")
+        await asyncio.gather(
+            qual_index.add_results(qual_raw),
+            quant_index.add_results(quant_raw),
+        )
 
-        # Step 3: synthesize qualitative bullets and quant projections concurrently
-        bullets_result, quant_raw = await asyncio.gather(
+        # Step 4: retrieve the most relevant chunks for each synthesis question
+        qual_query  = f"job market career trajectory insights for: {scenario.name}"
+        quant_query = f"salary ranges tuition cost of living financial data for: {scenario.name}"
+
+        qual_chunks, quant_chunks = await asyncio.gather(
+            qual_index.query(qual_query, top_k=8),
+            quant_index.query(quant_query, top_k=8),
+        )
+
+        # Step 5: synthesize using only the top retrieved chunks
+        bullets_result, quant_result = await asyncio.gather(
             chat_json_validated(
                 messages=[
                     {"role": "system", "content": QUALITATIVE_SYNTHESIS_PROMPT},
@@ -146,7 +165,7 @@ class ResearchAgent(BaseAgent):
                         "role": "user",
                         "content": (
                             f"Scenario:\n{scenario_json}\n\n"
-                            f"Search results:\n{_fmt(qual_results)}"
+                            f"Search results:\n{_fmt_chunks(qual_chunks)}"
                         ),
                     },
                 ],
@@ -162,7 +181,7 @@ class ResearchAgent(BaseAgent):
                         "content": (
                             f"User profile:\n{profile_json}\n\n"
                             f"Scenario:\n{scenario_json}\n\n"
-                            f"Search results:\n{_fmt(quant_results_raw)}"
+                            f"Search results:\n{_fmt_chunks(quant_chunks)}"
                         ),
                     },
                 ],
@@ -180,13 +199,13 @@ class ResearchAgent(BaseAgent):
 
         quant = QuantResult(
             scenario_id=scenario.id,
-            starting_salary_p25=quant_raw.starting_salary_p25,
-            starting_salary_p50=quant_raw.starting_salary_p50,
-            starting_salary_p75=quant_raw.starting_salary_p75,
-            five_year_cumulative_net=quant_raw.five_year_cumulative_net,
-            debt_load=quant_raw.debt_load,
-            break_even_years=quant_raw.break_even_years,
-            notes=quant_raw.notes,
+            starting_salary_p25=quant_result.starting_salary_p25,
+            starting_salary_p50=quant_result.starting_salary_p50,
+            starting_salary_p75=quant_result.starting_salary_p75,
+            five_year_cumulative_net=quant_result.five_year_cumulative_net,
+            debt_load=quant_result.debt_load,
+            break_even_years=quant_result.break_even_years,
+            notes=quant_result.notes,
         )
 
         return research, quant

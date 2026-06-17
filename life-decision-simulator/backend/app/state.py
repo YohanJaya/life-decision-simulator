@@ -9,6 +9,8 @@ from .schemas import (
     Scenario,
     QuantResult,
     ResearchResult,
+    MarketOutlook,
+    MonteCarloResult,
     TradeoffMatrix,
     DecisionBrief,
 )
@@ -22,6 +24,8 @@ class SessionState(BaseModel):
     scenarios: list[Scenario] = []
     quant_results: list[QuantResult] = []
     research_results: list[ResearchResult] = []
+    market_outlooks: list[MarketOutlook] = []
+    monte_carlo_results: list[MonteCarloResult] = []
     tradeoff_matrix: Optional[TradeoffMatrix] = None
     brief: Optional[DecisionBrief] = None
     perturbation: Optional[str] = None

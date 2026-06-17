@@ -11,7 +11,9 @@ from ..llm import chat_json_validated
 SYSTEM_PROMPT = """\
 You are a strategic advisor generating concrete decision scenarios for a user.
 
-Given the user's profile, generate 3-4 distinct, realistic scenarios they could pursue.
+Given the user's profile, generate 6-8 distinct, realistic scenarios they could pursue.
+Cover a range from conservative to ambitious — include variations like:
+different geographies, part-time vs full-time study, hybrid paths, accelerated timelines, etc.
 Each scenario should be a concrete path (not vague), with a short name, a 2-3 sentence description,
 and 3-5 key assumptions that make the scenario work.
 

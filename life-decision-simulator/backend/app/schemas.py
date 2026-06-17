@@ -75,6 +75,51 @@ class ResearchResult(BaseModel):
     search_queries_used: list[str]
 
 
+# ── Monte Carlo ───────────────────────────────────────────────────────────────
+
+class YearlyDistribution(BaseModel):
+    year: int
+    p10: float
+    p25: float
+    p50: float
+    p75: float
+    p90: float
+
+
+class MonteCarloResult(BaseModel):
+    scenario_id: str
+    n_simulations: int
+    cumulative_net_p10: float
+    cumulative_net_p25: float
+    cumulative_net_p50: float
+    cumulative_net_p75: float
+    cumulative_net_p90: float
+    prob_positive: float            # % simulations where 5yr net > 0
+    prob_major_disruption: float    # % simulations with at least one income shock year
+    downside_risk_usd: float        # p10 - p50
+    upside_potential_usd: float     # p90 - p50
+    yearly: list[YearlyDistribution]
+    risk_label: Literal["low", "medium", "high"]
+
+
+# ── Market Outlook ────────────────────────────────────────────────────────────
+
+class MarketOutlook(BaseModel):
+    scenario_id: str
+    target_role: str
+    region: str
+    projected_growth: Literal["much_faster", "faster", "average", "slower", "declining", "uncertain"]
+    projected_growth_rationale: str
+    automation_risk: Literal["low", "medium", "high"]
+    automation_risk_rationale: str
+    demand_trend: Literal["growing", "stable", "declining", "uncertain"]
+    key_risks: list[str]          # e.g. ["AI replacing entry-level tasks", "visa cap uncertainty"]
+    key_tailwinds: list[str]      # e.g. ["cloud infra still growing", "healthcare AI expansion"]
+    time_horizon_fit: Literal["strong", "mixed", "weak"]
+    time_horizon_rationale: str   # e.g. "Market peaks in ~3 yrs; user's 5yr horizon is well-aligned"
+    sources: list[str]            # URLs from search results
+
+
 # ── Tradeoff analysis ─────────────────────────────────────────────────────────
 
 TRADEOFF_DIMENSIONS = [
@@ -138,6 +183,24 @@ class DecisionBrief(BaseModel):
     generated_at: str   # ISO timestamp
 
 
+# ── Ranked Scenarios ──────────────────────────────────────────────────────────
+
+class RankedScenario(BaseModel):
+    rank: int
+    score: float
+    scenario: Scenario
+    tradeoff_entries: list[TradeoffEntry]
+    research: Optional[ResearchResult] = None
+    quant: Optional[QuantResult] = None
+    monte_carlo: Optional[MonteCarloResult] = None
+    market_outlook: Optional[MarketOutlook] = None
+
+
+class RankedScenariosResponse(BaseModel):
+    ranked: list[RankedScenario]
+    total: int
+
+
 # ── API request / response models ─────────────────────────────────────────────
 
 class SessionResponse(BaseModel):
@@ -171,6 +234,8 @@ class AnalysisRequest(BaseModel):
 class AnalysisResponse(BaseModel):
     quant: list[QuantResult]
     research: list[ResearchResult]
+    market_outlooks: list[MarketOutlook]
+    monte_carlo: list[MonteCarloResult]
     tradeoffs: TradeoffMatrix
 
 
