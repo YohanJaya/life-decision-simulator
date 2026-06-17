@@ -24,6 +24,7 @@ class SessionState(BaseModel):
     research_results: list[ResearchResult] = []
     tradeoff_matrix: Optional[TradeoffMatrix] = None
     brief: Optional[DecisionBrief] = None
+    perturbation: Optional[str] = None
 
 
 class MemoryStore(ABC):
