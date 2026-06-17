@@ -52,7 +52,7 @@ class ScenarioGeneratorAgent(BaseAgent):
                 "role": "user",
                 "content": (
                     f"Here is the user's profile:\n{profile_json}\n\n"
-                    "Please generate 3-4 concrete scenarios for this person."
+                    "Please generate concrete practical scenarios for this person."
                 ),
             },
         ]
