@@ -3,17 +3,20 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
-from pathlib import Path
+
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct
 
 logger = logging.getLogger(__name__)
 
 CHUNK_SIZE = 400
 CHUNK_OVERLAP = 80
 
-_STORE_DIR = Path(__file__).parent.parent.parent / "qdrant_store"
-_STORE_DIR.mkdir(parents=True, exist_ok=True)
+# ── Shared Docker client (initialized once at import time) ────────────────────
+_qdrant = QdrantClient("localhost", port=6333)
+logger.info("Qdrant client connected to localhost:6333")
 
-# Loaded once at import time — first load downloads ~80 MB, then cached
+# ── Embedding model (downloaded once, then cached locally) ────────────────────
 try:
     from sentence_transformers import SentenceTransformer
     _model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -22,13 +25,14 @@ try:
     logger.info("Sentence-transformer model loaded (dim=%d)", _VECTOR_SIZE)
 except Exception as exc:
     _EMBED_AVAILABLE = False
+    _VECTOR_SIZE = 384
     logger.warning("sentence-transformers unavailable, retriever disabled: %s", exc)
 
 
 def _chunk_text(text: str) -> list[str]:
     chunks, start = [], 0
     while start < len(text):
-        chunks.append(text[start:start + CHUNK_SIZE])
+        chunks.append(text[start : start + CHUNK_SIZE])
         start += CHUNK_SIZE - CHUNK_OVERLAP
     return chunks or [text]
 
@@ -37,25 +41,34 @@ def _embed(texts: list[str]) -> list[list[float]]:
     return _model.encode(texts, show_progress_bar=False).tolist()
 
 
-class ScenarioIndex:
-    """Qdrant-backed persistent vector index for one scenario's search results.
+def _ensure_collection(name: str) -> None:
+    """Create the collection if it doesn't already exist."""
+    existing = {c.name for c in _qdrant.get_collections().collections}
+    if name not in existing:
+        _qdrant.create_collection(
+            collection_name=name,
+            vectors_config=VectorParams(size=_VECTOR_SIZE, distance=Distance.COSINE),
+        )
+        logger.info("Created Qdrant collection '%s'", name)
 
-    All heavy ops (embedding, disk I/O) run in a thread pool to keep the
-    async event loop free.
+
+class ScenarioIndex:
+    """Vector index for one scenario's search results, backed by Docker Qdrant.
+
+    The collection is created in __init__ so that by the time add_results or
+    query is called, the collection is guaranteed to exist.
     """
 
     def __init__(self, collection_name: str) -> None:
-        # Collection names must be alphanumeric + underscore, max 255 chars
         self._name = collection_name.replace("-", "_")[:100]
+        if _EMBED_AVAILABLE:
+            _ensure_collection(self._name)
 
-    # ── sync helpers ─────────────────────────────────────────────────────────
+    # ── sync helpers ──────────────────────────────────────────────────────────
 
     def _add_sync(self, results: list[dict]) -> int:
         if not _EMBED_AVAILABLE:
             return 0
-
-        from qdrant_client import QdrantClient
-        from qdrant_client.models import Distance, VectorParams, PointStruct
 
         docs, metas, ids = [], [], []
         for r in results:
@@ -70,44 +83,26 @@ class ScenarioIndex:
             return 0
 
         vectors = _embed(docs)
-
-        client = QdrantClient(path=str(_STORE_DIR))
-
-        # Create collection if it doesn't exist yet
-        existing = [c.name for c in client.get_collections().collections]
-        if self._name not in existing:
-            client.create_collection(
-                collection_name=self._name,
-                vectors_config=VectorParams(size=_VECTOR_SIZE, distance=Distance.COSINE),
-            )
-
         points = [
             PointStruct(
-                id=abs(int(uid[:8], 16)),   # Qdrant needs integer or UUID ids
+                id=abs(int(uid[:8], 16)),
                 vector=vec,
                 payload={"text": doc, "url": meta["url"], "title": meta["title"]},
             )
             for uid, vec, doc, meta in zip(ids, vectors, docs, metas)
         ]
-        client.upsert(collection_name=self._name, points=points)
-        logger.info("Stored %d chunks in Qdrant collection '%s'", len(points), self._name)
+        _qdrant.upsert(collection_name=self._name, points=points)
+        logger.info("Stored %d chunks in '%s'", len(points), self._name)
         return len(points)
 
     def _query_sync(self, question: str, top_k: int) -> list[dict]:
         if not _EMBED_AVAILABLE:
             return []
 
-        from qdrant_client import QdrantClient
-
-        client = QdrantClient(path=str(_STORE_DIR))
-        existing = [c.name for c in client.get_collections().collections]
-        if self._name not in existing:
-            return []
-
         q_vec = _embed([question])[0]
-        hits = client.search(
+        result = _qdrant.query_points(
             collection_name=self._name,
-            query_vector=q_vec,
+            query=q_vec,
             limit=top_k,
         )
         return [
@@ -116,7 +111,7 @@ class ScenarioIndex:
                 "url": h.payload.get("url", ""),
                 "title": h.payload.get("title", ""),
             }
-            for h in hits
+            for h in result.points
         ]
 
     # ── async API ─────────────────────────────────────────────────────────────
