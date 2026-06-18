@@ -30,7 +30,7 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export async function checkStatus(): Promise<string> {
-  const res = await fetch('/')
+  const res = await fetch('/api/health')
   if (!res.ok) throw new Error('Backend unreachable')
   const data: { status: string } = await res.json()
   return data.status
@@ -39,6 +39,10 @@ export async function checkStatus(): Promise<string> {
 export async function createSession(): Promise<string> {
   const data: { session_id: string } = await post('/session', {})
   return data.session_id
+}
+
+export async function getSessionState(sessionId: string): Promise<{ phase: string }> {
+  return get(`/session/${sessionId}/state`)
 }
 
 export async function sendIntake(

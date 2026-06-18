@@ -100,6 +100,7 @@ def _get_state(session_id: str) -> SessionState:
 
 
 @app.get("/")
+@app.get("/api/health")
 async def root():
     return {"status": "ok"}
 
@@ -126,7 +127,6 @@ async def get_state(session_id: str):
 async def intake(req: IntakeRequest):
     state = _get_state(req.session_id)
 
-    # Append user message (or form data summary) to history
     user_content = req.message
     if req.form_data:
         user_content = (

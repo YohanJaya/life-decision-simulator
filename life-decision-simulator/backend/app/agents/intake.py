@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from typing import Optional
 
 from pydantic import BaseModel
@@ -8,7 +7,7 @@ from pydantic import BaseModel
 from .base import BaseAgent, AgentOutput
 from ..state import SessionState
 from ..schemas import UserProfile
-from ..llm import chat, chat_json_validated
+from ..llm import chat_json_validated
 
 SYSTEM_PROMPT = """\
 You are an empathetic decision advisor conducting an intake interview to understand a user's life decision.
@@ -33,6 +32,8 @@ Rules:
 4. While still gathering info, respond with ONLY valid JSON:
    {"profile_complete": false, "profile": null, "reply": "Your conversational response here"}
 5. Never include anything outside the JSON object in your response.
+6. You need at most 2-3 follow-up questions. If the form data already covers the basics, complete the profile after one round of follow-ups.
+7. For any missing optional fields (hard_constraints, soft_preferences), infer reasonable defaults rather than asking more questions.
 """
 
 
@@ -49,15 +50,9 @@ class IntakeAgent(BaseAgent):
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         messages.extend(state.chat_history)
 
-        raw = await chat(messages=messages, agent_name=self.name, temperature=0.4)
-
-        try:
-            data = json.loads(raw)
-            profile_complete = bool(data.get("profile_complete", False))
-            reply = str(data.get("reply", raw))
-            profile = None
-            if profile_complete and data.get("profile"):
-                profile = UserProfile.model_validate(data["profile"])
-            return IntakeOutput(reply=reply, profile_complete=profile_complete, profile=profile)
-        except Exception:
-            return IntakeOutput(reply=raw, profile_complete=False, profile=None)
+        return await chat_json_validated(
+            messages,
+            IntakeOutput,
+            agent_name=self.name,
+            temperature=0.4,
+        )
