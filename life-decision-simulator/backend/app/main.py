@@ -206,40 +206,46 @@ async def run_analysis(req: AnalysisRequest):
     sid = req.session_id
     n = len(state.scenarios)
 
-    await progress_tracker.emit(sid, f"Starting research across {n} scenarios…")
+    try:
+        await progress_tracker.emit(sid, f"Starting research across {n} scenarios…")
 
-    research_output, outlook_output = await asyncio.gather(
-        _research.run(state),
-        _market_outlook.run(state),
-    )
+        research_output, outlook_output = await asyncio.gather(
+            _research.run(state),
+            _market_outlook.run(state),
+        )
 
-    state.quant_results = research_output.quant_results
-    state.research_results = research_output.research_results
-    state.market_outlooks = outlook_output.results
+        state.quant_results = research_output.quant_results
+        state.research_results = research_output.research_results
+        state.market_outlooks = outlook_output.results
 
-    await progress_tracker.emit(sid, "Running Monte Carlo simulations…")
-    time_horizon = state.profile.time_horizon_years if state.profile else 5
-    state.monte_carlo_results = simulate_all(
-        state.quant_results,
-        state.market_outlooks,
-        time_horizon,
-    )
+        await progress_tracker.emit(sid, "Running Monte Carlo simulations…")
+        time_horizon = state.profile.time_horizon_years if state.profile else 5
+        state.monte_carlo_results = simulate_all(
+            state.quant_results,
+            state.market_outlooks,
+            time_horizon,
+        )
 
-    await progress_tracker.emit(sid, "Analyzing tradeoffs across all scenarios…")
-    tradeoff_output = await _tradeoff.run(state)
-    state.tradeoff_matrix = tradeoff_output.matrix
-    state.phase = "exploration"
-    store.set(req.session_id, state)
+        await progress_tracker.emit(sid, "Analyzing tradeoffs across all scenarios…")
+        tradeoff_output = await _tradeoff.run(state)
+        state.tradeoff_matrix = tradeoff_output.matrix
+        state.phase = "exploration"
+        store.set(req.session_id, state)
 
-    await progress_tracker.done(sid)
+        await progress_tracker.done(sid)
 
-    return AnalysisResponse(
-        quant=research_output.quant_results,
-        research=research_output.research_results,
-        market_outlooks=outlook_output.results,
-        monte_carlo=state.monte_carlo_results,
-        tradeoffs=tradeoff_output.matrix,
-    )
+        return AnalysisResponse(
+            quant=research_output.quant_results,
+            research=research_output.research_results,
+            market_outlooks=outlook_output.results,
+            monte_carlo=state.monte_carlo_results,
+            tradeoffs=tradeoff_output.matrix,
+        )
+
+    except Exception as exc:
+        logging.error("Analysis failed for session %s: %s", sid, exc, exc_info=True)
+        await progress_tracker.error(sid, f"Analysis failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 # ── Brief ─────────────────────────────────────────────────────────────────────

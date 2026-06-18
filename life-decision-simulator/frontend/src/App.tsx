@@ -188,6 +188,9 @@ function App() {
           if (data.done) {
             source.close()
             resolve()
+          } else if (data.error) {
+            source.close()
+            reject(new Error(data.message ?? 'Analysis failed'))
           } else if (data.message) {
             setProgressMessages(prev => [...prev, data.message])
           }

@@ -32,3 +32,11 @@ async def done(session_id: str) -> None:
     q = _queues.get(session_id)
     if q:
         await q.put(None)  # sentinel — SSE generator stops on None
+
+
+async def error(session_id: str, message: str) -> None:
+    """Signal that the analysis failed — emits error then closes stream."""
+    q = _queues.get(session_id)
+    if q:
+        await q.put({"error": True, "message": message})
+        await q.put(None)
