@@ -13,20 +13,39 @@ CHUNK_SIZE = 400
 CHUNK_OVERLAP = 80
 
 # ── Shared Docker client (initialized once at import time) ────────────────────
-_qdrant = QdrantClient("localhost", port=6333)
+# check_compatibility=False skips the version-probe HTTP call the client otherwise
+# makes at construction — that call adds latency and emits a warning when Qdrant
+# isn't running (e.g. during tests or before the Docker container is up).
+_qdrant = QdrantClient("localhost", port=6333, check_compatibility=False)
 logger.info("Qdrant client connected to localhost:6333")
 
-# ── Embedding model (downloaded once, then cached locally) ────────────────────
-try:
-    from sentence_transformers import SentenceTransformer
-    _model = SentenceTransformer("all-MiniLM-L6-v2")
-    _VECTOR_SIZE = 384
-    _EMBED_AVAILABLE = True
-    logger.info("Sentence-transformer model loaded (dim=%d)", _VECTOR_SIZE)
-except Exception as exc:
-    _EMBED_AVAILABLE = False
-    _VECTOR_SIZE = 384
-    logger.warning("sentence-transformers unavailable, retriever disabled: %s", exc)
+# ── Embedding model (loaded lazily on first use, then cached for the process) ──
+# Loading is deferred out of import time so the app — and its test suite — import
+# without downloading ~90 MB or pulling torch into memory. The model is fetched
+# once on the first embedding call and reused thereafter.
+_VECTOR_SIZE = 384
+_model = None
+_model_load_attempted = False
+
+
+def _get_model():
+    """Return the embedding model, loading it on first call. Returns None if
+    sentence-transformers is unavailable, so callers degrade gracefully."""
+    global _model, _model_load_attempted
+    if not _model_load_attempted:
+        _model_load_attempted = True
+        try:
+            from sentence_transformers import SentenceTransformer
+            _model = SentenceTransformer("all-MiniLM-L6-v2")
+            logger.info("Sentence-transformer model loaded (dim=%d)", _VECTOR_SIZE)
+        except Exception as exc:
+            _model = None
+            logger.warning("sentence-transformers unavailable, retriever disabled: %s", exc)
+    return _model
+
+
+def _embeddings_available() -> bool:
+    return _get_model() is not None
 
 
 def _chunk_text(text: str) -> list[str]:
@@ -38,7 +57,7 @@ def _chunk_text(text: str) -> list[str]:
 
 
 def _embed(texts: list[str]) -> list[list[float]]:
-    return _model.encode(texts, show_progress_bar=False).tolist()
+    return _get_model().encode(texts, show_progress_bar=False).tolist()
 
 
 def _ensure_collection(name: str) -> None:
@@ -61,13 +80,13 @@ class ScenarioIndex:
 
     def __init__(self, collection_name: str) -> None:
         self._name = collection_name.replace("-", "_")[:100]
-        if _EMBED_AVAILABLE:
+        if _embeddings_available():
             _ensure_collection(self._name)
 
     # ── sync helpers ──────────────────────────────────────────────────────────
 
     def _add_sync(self, results: list[dict]) -> int:
-        if not _EMBED_AVAILABLE:
+        if not _embeddings_available():
             return 0
 
         docs, metas, ids = [], [], []
@@ -96,7 +115,7 @@ class ScenarioIndex:
         return len(points)
 
     def _query_sync(self, question: str, top_k: int) -> list[dict]:
-        if not _EMBED_AVAILABLE:
+        if not _embeddings_available():
             return []
 
         q_vec = _embed([question])[0]
