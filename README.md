@@ -94,13 +94,13 @@ source .venv/bin/activate
 uvicorn app.main:app --reload --port 8000
 ```
 
-On first run, the `all-MiniLM-L6-v2` embedding model (~90 MB) downloads automatically and is cached in `~/.cache/huggingface/`.
+The `all-MiniLM-L6-v2` embedding model (~90 MB) is loaded lazily — on the first analysis that needs it, not at startup — and then cached in `~/.cache/huggingface/`. So the first analysis run takes a little longer while the model downloads.
 
 Wait for:
 ```
-INFO Qdrant client connected to localhost:6333
-INFO Sentence-transformer model loaded (dim=384)
+INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 ```
 
 **Terminal 3 — Frontend**
