@@ -68,8 +68,8 @@ async def chat(
             tokens,
         )
 
-        # Brief pause after each call to stay well within TPM limits
-        await asyncio.sleep(1.5)
+        # Pace calls to stay under 6,000 TPM — 10s gap → max ~6 calls/min × 800 tokens = 4,800 TPM
+        await asyncio.sleep(10)
 
     return content
 

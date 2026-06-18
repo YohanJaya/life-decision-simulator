@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import uuid
 import logging
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from .schemas import (
     SessionResponse,
@@ -31,6 +33,7 @@ from .agents.tradeoff_analyzer import TradeoffAnalyzerAgent
 from .agents.what_if import WhatIfSimulatorAgent
 from .agents.orchestrator import OrchestratorAgent
 from .simulation import simulate_all
+from .tools import progress as progress_tracker
 from typing import Optional
 
 _SCORE_MAP = {"strong": 3, "mixed": 2, "weak": 1, "unclear": 0}
@@ -167,13 +170,44 @@ async def generate_scenarios(req: ScenariosRequest):
     return ScenariosResponse(scenarios=output.scenarios)
 
 
+@app.get("/api/analysis/stream/{session_id}")
+async def analysis_stream(session_id: str):
+    """SSE endpoint — frontend connects here to receive live progress messages."""
+    async def event_generator():
+        q = progress_tracker.create_queue(session_id)
+        try:
+            while True:
+                try:
+                    msg = await asyncio.wait_for(q.get(), timeout=600.0)
+                except asyncio.TimeoutError:
+                    yield "data: {\"message\": \"Still working…\", \"step\": null}\n\n"
+                    continue
+
+                if msg is None:   # sentinel — analysis finished
+                    yield f"data: {json.dumps({'done': True})}\n\n"
+                    break
+                yield f"data: {json.dumps(msg)}\n\n"
+        finally:
+            progress_tracker.remove_queue(session_id)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
 @app.post("/api/analysis/run", response_model=AnalysisResponse)
 async def run_analysis(req: AnalysisRequest):
     state = _get_state(req.session_id)
     if not state.scenarios:
         raise HTTPException(status_code=400, detail="Generate scenarios before running analysis")
 
-    # Run research (includes quant) and market outlook in parallel
+    sid = req.session_id
+    n = len(state.scenarios)
+
+    await progress_tracker.emit(sid, f"Starting research across {n} scenarios…")
+
     research_output, outlook_output = await asyncio.gather(
         _research.run(state),
         _market_outlook.run(state),
@@ -183,7 +217,7 @@ async def run_analysis(req: AnalysisRequest):
     state.research_results = research_output.research_results
     state.market_outlooks = outlook_output.results
 
-    # Monte Carlo: pure CPU, no I/O — runs synchronously
+    await progress_tracker.emit(sid, "Running Monte Carlo simulations…")
     time_horizon = state.profile.time_horizon_years if state.profile else 5
     state.monte_carlo_results = simulate_all(
         state.quant_results,
@@ -191,11 +225,13 @@ async def run_analysis(req: AnalysisRequest):
         time_horizon,
     )
 
-    # Tradeoff analysis sees quant + research + outlooks + MC distributions
+    await progress_tracker.emit(sid, "Analyzing tradeoffs across all scenarios…")
     tradeoff_output = await _tradeoff.run(state)
     state.tradeoff_matrix = tradeoff_output.matrix
     state.phase = "exploration"
     store.set(req.session_id, state)
+
+    await progress_tracker.done(sid)
 
     return AnalysisResponse(
         quant=research_output.quant_results,

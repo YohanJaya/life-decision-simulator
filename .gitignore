@@ -28,3 +28,7 @@ Thumbs.db
 
 # Session data
 sessions/
+
+# Vector store
+chroma_store/
+qdrant_store/

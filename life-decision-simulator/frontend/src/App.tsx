@@ -39,13 +39,6 @@ function clearStorage() {
   localStorage.removeItem(STORAGE_KEY)
 }
 
-const STEPS = [
-  'Processing your profile…',
-  'Generating scenarios…',
-  'Researching each path…',
-  'Running Monte Carlo simulations…',
-  'Ranking scenarios…',
-]
 
 function App() {
   const [phase, setPhase]               = useState<Phase>('checking')
@@ -56,7 +49,7 @@ function App() {
   const [ranked, setRanked]             = useState<RankedScenario[]>([])
   const [total, setTotal]               = useState(0)
   const [showingAll, setShowingAll]     = useState(false)
-  const [step, setStep]                 = useState(0)
+  const [progressMessages, setProgressMessages] = useState<string[]>([])
   const [error, setError]               = useState<string | null>(null)
 
   // Persist session to localStorage whenever key state changes
@@ -181,12 +174,38 @@ function App() {
 
   async function runAnalysisFlow(sid: string) {
     setPhase('analyzing')
-    setStep(0)
+    setProgressMessages(['Generating scenarios…'])
+
     try {
-      setStep(1); await generateScenarios(sid)
-      setStep(2); await runAnalysis(sid)
-      setStep(3)
-      setStep(4)
+      await generateScenarios(sid)
+
+      // Open SSE stream before calling runAnalysis so no events are missed
+      await new Promise<void>((resolve, reject) => {
+        const source = new EventSource(`/api/analysis/stream/${sid}`)
+
+        source.onmessage = (e) => {
+          const data = JSON.parse(e.data)
+          if (data.done) {
+            source.close()
+            resolve()
+          } else if (data.message) {
+            setProgressMessages(prev => [...prev, data.message])
+          }
+        }
+
+        source.onerror = () => {
+          source.close()
+          reject(new Error('Progress stream disconnected'))
+        }
+
+        // Start analysis after SSE is open
+        runAnalysis(sid).catch(err => {
+          source.close()
+          reject(err)
+        })
+      })
+
+      setProgressMessages(prev => [...prev, 'Ranking scenarios…'])
       const res = await getRankedScenarios(sid, 5)
       setRanked(res.ranked)
       setTotal(res.total)
@@ -267,11 +286,11 @@ function App() {
           <div className="analyzing-view card">
             <div className="analyzing-spinner" />
             <h3>Analyzing your decision…</h3>
-            <div className="steps-list">
-              {STEPS.map((s, i) => (
-                <div key={i} className={`step-item ${i < step ? 'done' : i === step ? 'active' : 'pending'}`}>
-                  <span className="step-icon">{i < step ? '✓' : i === step ? '⟳' : '○'}</span>
-                  <span>{s}</span>
+            <div className="progress-log">
+              {progressMessages.map((msg, i) => (
+                <div key={i} className={`progress-line ${i === progressMessages.length - 1 ? 'active' : 'done'}`}>
+                  <span className="progress-icon">{i === progressMessages.length - 1 ? '⟳' : '✓'}</span>
+                  <span>{msg}</span>
                 </div>
               ))}
             </div>
