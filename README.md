@@ -6,10 +6,10 @@ An AI-powered tool that helps you simulate major life decisions — career chang
 
 ## How It Works
 
-1. **Intake** — Fill in a short form (age, income, goal, time horizon). The AI then holds a short conversation to fill in missing context.
-2. **Scenario Generation** — The AI generates 3–5 realistic decision paths tailored to your profile.
+1. **Intake** — Fill in a short form (name, current situation, decision domain, location, and the options you're already considering). The AI then holds a short conversation to fill in missing context — your values, hard constraints, soft preferences, risk tolerance, and time horizon.
+2. **Scenario Generation** — The AI generates 6–8 realistic decision paths tailored to your profile.
 3. **Research** — For each scenario, 6 targeted web searches are run (qualitative + quantitative). Results are embedded and stored in Qdrant, then the most relevant chunks are retrieved to keep token usage low.
-4. **Monte Carlo Simulation** — 1,000 income simulations per scenario produce probability distributions and a risk label (low / medium / high).
+4. **Monte Carlo Simulation** — 5,000 income simulations per scenario produce probability distributions and a risk label (low / medium / high).
 5. **Tradeoff Analysis** — Each scenario is scored across dimensions (financial, lifestyle, risk, time).
 6. **Ranked Results** — Scenarios are ranked by a composite score and displayed with research bullets, salary percentiles, 5-year projections, and tradeoff breakdowns.
 
@@ -25,7 +25,7 @@ An AI-powered tool that helps you simulate major life decisions — career chang
 | Web Search | Tavily API |
 | Vector DB | Qdrant (Docker) |
 | Embeddings | `all-MiniLM-L6-v2` via sentence-transformers (384-dim) |
-| Simulation | NumPy Monte Carlo (runs in-process) |
+| Simulation | Monte Carlo (Python stdlib `random`, runs in-process) |
 | Session Storage | JSON files (`backend/sessions/`) |
 
 ---
@@ -113,6 +113,23 @@ Open **http://localhost:5173** in your browser.
 
 ---
 
+## Testing
+
+The backend ships with a pytest suite that runs without any API keys, Qdrant, or network access (the retriever and web search degrade gracefully when unavailable).
+
+```bash
+cd backend
+source .venv/bin/activate
+pytest
+```
+
+- `tests/test_smoke.py` — API health, session lifecycle, and endpoint guardrails (prerequisite checks return HTTP 400).
+- `tests/test_simulation.py` — Monte Carlo engine invariants (percentile ordering, probability bounds, risk labels, debt/idle effects).
+
+These same tests run automatically in CI on every push and pull request — see [.github/workflows/ci.yml](.github/workflows/ci.yml).
+
+---
+
 ## Project Structure
 
 ```
@@ -120,6 +137,7 @@ life-decision-simulator/
 ├── backend/
 │   ├── app/
 │   │   ├── agents/
+│   │   │   ├── base.py              # Abstract BaseAgent + AgentOutput
 │   │   │   ├── intake.py            # Multi-turn profile-building conversation
 │   │   │   ├── scenario_generator.py
 │   │   │   ├── research.py          # Web search + Qdrant RAG + synthesis
@@ -131,25 +149,38 @@ life-decision-simulator/
 │   │   │   ├── retriever.py         # Qdrant vector store (Docker client)
 │   │   │   ├── web_search.py        # Tavily search wrapper
 │   │   │   └── progress.py          # SSE progress queue
+│   │   ├── simulation/
+│   │   │   ├── __init__.py          # exposes simulate_all
+│   │   │   └── monte_carlo.py       # Monte Carlo engine (Python random)
 │   │   ├── main.py                  # FastAPI routes + SSE stream endpoint
 │   │   ├── state.py                 # FileStore session persistence
-│   │   ├── simulation.py            # Monte Carlo engine
 │   │   ├── schemas.py
 │   │   ├── llm.py                   # Groq client + rate-limit semaphore
 │   │   └── config.py
+│   ├── tests/                       # pytest suite (smoke + simulation)
 │   ├── sessions/                    # Auto-created; JSON session files
 │   ├── pyproject.toml
+│   ├── .env.example
 │   └── .env
 ├── frontend/
 │   ├── src/
 │   │   ├── App.tsx                  # Phase machine + session resume logic
-│   │   ├── api.ts
+│   │   ├── api.ts                   # Typed fetch wrappers for the backend
+│   │   ├── types.ts                 # Shared TS types mirroring backend schemas
+│   │   ├── main.tsx                 # React entry point
 │   │   ├── components/
 │   │   │   ├── IntakeForm.tsx
 │   │   │   ├── ChatView.tsx         # Intake chat with profile-complete buttons
-│   │   │   └── ScenarioCards.tsx
+│   │   │   ├── ChatPanel.tsx        # Free-form follow-up chat
+│   │   │   ├── ScenarioCards.tsx    # Ranked scenario cards
+│   │   │   ├── TradeoffMatrix.tsx   # Scenario × dimension scoring grid
+│   │   │   ├── DecisionBrief.tsx    # Final synthesized recommendation
+│   │   │   └── WhatIfBox.tsx        # What-if perturbation input
 │   │   └── styles.css
 │   └── vite.config.ts
+├── .github/
+│   └── workflows/
+│       └── ci.yml                   # CI: backend pytest + frontend build
 └── README.md
 ```
 

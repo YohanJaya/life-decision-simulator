@@ -14,6 +14,7 @@ __pycache__/
 # Env
 .env
 .env.*
+!.env.example
 
 # OS
 .DS_Store
@@ -30,5 +31,4 @@ Thumbs.db
 sessions/
 
 # Vector store
-chroma_store/
 qdrant_store/

@@ -129,9 +129,11 @@ body {
 .badge-high   { background: #14532d; color: #86efac; }
 .badge-medium { background: #713f12; color: #fde68a; }
 .badge-low    { background: #7f1d1d; color: #fca5a5; }
---badge-high:   #86efac;
---badge-medium: #fde68a;
---badge-low:    #fca5a5;
+:root {
+  --badge-high:   #86efac;
+  --badge-medium: #fde68a;
+  --badge-low:    #fca5a5;
+}
 
 /* ── Idle / Hero ─────────────────────────────────────────────────────────── */
 .idle-view { width: 100%; }
