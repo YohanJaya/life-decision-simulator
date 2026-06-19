@@ -21,7 +21,7 @@ An AI-powered tool that helps you simulate major life decisions — career chang
 |---|---|
 | Frontend | React 18 + TypeScript + Vite |
 | Backend | FastAPI (Python 3.11+) |
-| LLM | Groq API (`llama-3.1-8b-instant`) |
+| LLM | OpenAI API (`gpt-4o-mini`) |
 | Web Search | Tavily API |
 | Vector DB | Qdrant (Docker) |
 | Embeddings | `all-MiniLM-L6-v2` via sentence-transformers (384-dim) |
@@ -35,7 +35,7 @@ An AI-powered tool that helps you simulate major life decisions — career chang
 - Docker
 - Python 3.11+
 - Node.js 18+
-- A [Groq API key](https://console.groq.com) (free tier)
+- An [OpenAI API key](https://platform.openai.com/api-keys)
 - A [Tavily API key](https://app.tavily.com) (free tier)
 
 ---
@@ -61,9 +61,9 @@ pip install -e .
 Create `backend/.env`:
 
 ```env
-LLM_BASE_URL=https://api.groq.com/openai/v1
-LLM_MODEL=llama-3.1-8b-instant
-LLM_API_KEY=gsk_your_groq_key_here
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4o-mini
+LLM_API_KEY=sk-your_openai_key_here
 TAVILY_API_KEY=tvly-your_tavily_key_here
 ```
 
@@ -155,7 +155,7 @@ life-decision-simulator/
 │   │   ├── main.py                  # FastAPI routes + SSE stream endpoint
 │   │   ├── state.py                 # FileStore session persistence
 │   │   ├── schemas.py
-│   │   ├── llm.py                   # Groq client + rate-limit semaphore
+│   │   ├── llm.py                   # OpenAI client + JSON-validate/retry
 │   │   └── config.py
 │   ├── tests/                       # pytest suite (smoke + simulation)
 │   ├── sessions/                    # Auto-created; JSON session files
@@ -188,8 +188,6 @@ life-decision-simulator/
 
 ## Key Design Decisions
 
-**Rate limit management** — Groq's free tier allows ~6,000 tokens/min. A `asyncio.Semaphore(1)` + 10-second sleep between LLM calls serializes requests and stays safely under the limit.
-
 **Token reduction via RAG** — Each scenario runs 6 web queries (8 results each = ~3,200 tokens of raw text). Qdrant stores these as embeddings and retrieves only the top 6 most relevant chunks (~600 tokens), saving ~2,600 tokens per synthesis call.
 
 **Session persistence** — Sessions are saved as JSON files in `backend/sessions/` and session ID + chat history are stored in `localStorage`. Refreshing the page or restarting the backend resumes from where you left off.
@@ -202,7 +200,7 @@ life-decision-simulator/
 
 | Variable | Description |
 |---|---|
-| `LLM_BASE_URL` | OpenAI-compatible endpoint (default: Groq) |
-| `LLM_MODEL` | Model name (default: `llama-3.1-8b-instant`) |
+| `LLM_BASE_URL` | OpenAI-compatible endpoint (default: OpenAI) |
+| `LLM_MODEL` | Model name (default: `gpt-4o-mini`) |
 | `LLM_API_KEY` | API key for the LLM provider |
 | `TAVILY_API_KEY` | Tavily web search API key |
