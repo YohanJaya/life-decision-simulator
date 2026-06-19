@@ -8,23 +8,34 @@ from pydantic import BaseModel, Field
 
 class FormData(BaseModel):
     name: str
-    current_situation: str        # e.g. "final-year CS undergrad at XYZ"
-    decision_domain: str          # e.g. "higher studies vs industry job"
-    location: str                 # current location
-    options_of_interest: list[str]  # rough options they're already considering
+    age: int
+    degree_program: str              # e.g. "BSc Computer Science"
+    current_university: str
+    cgpa: float                      # e.g. 3.7 out of 4.0
+    other_qualifications: list[str]  # certifications, awards, etc.
+    other_degrees_diplomas: list[str]  # other degrees or diplomas
+    decision_domain: str             # e.g. "pursue MS abroad vs local job"
+    location: str
+    options_of_interest: list[str]
 
 
 class UserProfile(BaseModel):
     name: str
-    current_situation: str
+    age: int
+    degree_program: str
+    current_university: str
+    cgpa: float
+    other_qualifications: list[str]
+    other_degrees_diplomas: list[str]
     decision_domain: str
     location: str
-    stated_values: list[str]        # e.g. ["financial security", "research impact"]
-    hard_constraints: list[str]     # e.g. ["cannot take >$30k debt"]
-    soft_preferences: list[str]     # e.g. ["prefer warm climate"]
+    stated_values: list[str]
+    hard_constraints: list[str]
+    soft_preferences: list[str]
     options_of_interest: list[str]
     risk_tolerance: Literal["low", "medium", "high"]
     time_horizon_years: int = Field(ge=1, le=20)
+    personality_insights: list[str] = []  # distilled from the 10-question conversation
     additional_context: str = ""
 
 
