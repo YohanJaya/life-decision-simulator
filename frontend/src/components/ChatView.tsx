@@ -35,13 +35,16 @@ export default function ChatView({ messages, onSend, onProceed, onClarify, loadi
       <div className="chat-messages">
         {messages.map((m, i) => (
           <div key={i} className={`chat-bubble chat-bubble-${m.role}`}>
-            <span className="chat-role">{m.role === 'assistant' ? 'Advisor' : 'You'}</span>
+            <span className="chat-role">
+              <span className="chat-avatar">{m.role === 'assistant' ? '🤖' : '👤'}</span>
+              {m.role === 'assistant' ? 'Advisor' : 'You'}
+            </span>
             <p>{m.content}</p>
           </div>
         ))}
         {loading && (
           <div className="chat-bubble chat-bubble-assistant">
-            <span className="chat-role">Advisor</span>
+            <span className="chat-role"><span className="chat-avatar">🤖</span> Advisor</span>
             <p className="chat-typing">Thinking<span className="dots">...</span></p>
           </div>
         )}

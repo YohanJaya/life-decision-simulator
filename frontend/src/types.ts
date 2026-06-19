@@ -2,7 +2,12 @@
 
 export interface FormData {
   name: string
-  current_situation: string
+  age: number
+  degree_program: string
+  current_university: string
+  cgpa: number
+  other_qualifications: string[]
+  other_degrees_diplomas: string[]
   decision_domain: string
   location: string
   options_of_interest: string[]
@@ -10,7 +15,12 @@ export interface FormData {
 
 export interface UserProfile {
   name: string
-  current_situation: string
+  age: number
+  degree_program: string
+  current_university: string
+  cgpa: number
+  other_qualifications: string[]
+  other_degrees_diplomas: string[]
   decision_domain: string
   location: string
   stated_values: string[]
@@ -19,6 +29,7 @@ export interface UserProfile {
   options_of_interest: string[]
   risk_tolerance: 'low' | 'medium' | 'high'
   time_horizon_years: number
+  personality_insights: string[]
   additional_context: string
 }
 

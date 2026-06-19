@@ -25,6 +25,9 @@ const SCORE_LABEL: Record<TradeoffScore, string> = {
 
 const RISK_COLOR = { low: 'var(--green)', medium: 'var(--yellow)', high: 'var(--red)' }
 
+const RANK_CLASS: Record<number, string> = { 1: 'gold', 2: 'silver', 3: 'bronze' }
+const RANK_ICON: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
+
 function fmt(n: number) {
   if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`
   if (Math.abs(n) >= 1_000)     return `$${(n / 1_000).toFixed(0)}k`
@@ -55,7 +58,7 @@ function DetailPanel({ item }: { item: RankedScenario }) {
 
       {scenario.assumptions.length > 0 && (
         <div className="detail-section">
-          <h4>Key Assumptions</h4>
+          <h4><span className="section-icon">📌</span> Key Assumptions</h4>
           <ul className="assumptions-list">
             {scenario.assumptions.map((a, i) => (
               <li key={i}><strong>{a.key}:</strong> {a.value}</li>
@@ -66,7 +69,7 @@ function DetailPanel({ item }: { item: RankedScenario }) {
 
       {/* Tradeoff reasoning */}
       <div className="detail-section">
-        <h4>Tradeoff Analysis</h4>
+        <h4><span className="section-icon">⚖️</span> Tradeoff Analysis</h4>
         <div className="dimensions-grid">
           {tradeoff_entries.map((e, i) => <DimensionRow key={i} entry={e} />)}
         </div>
@@ -75,7 +78,7 @@ function DetailPanel({ item }: { item: RankedScenario }) {
       {/* Financials */}
       {quant && (
         <div className="detail-section">
-          <h4>Financial Outlook</h4>
+          <h4><span className="section-icon">💰</span> Financial Outlook</h4>
           <div className="fin-grid">
             <div className="fin-cell">
               <div className="fin-label">Starting Salary</div>
@@ -117,7 +120,7 @@ function DetailPanel({ item }: { item: RankedScenario }) {
       {mc && (
         <div className="detail-section">
           <h4>
-            Monte Carlo Distribution
+            <span className="section-icon">🎲</span> Monte Carlo Distribution
             <span className="section-meta">{mc.n_simulations.toLocaleString()} simulations</span>
           </h4>
           <MonteCarloChart mc={mc} />
@@ -146,7 +149,7 @@ function DetailPanel({ item }: { item: RankedScenario }) {
       {/* Market outlook */}
       {mo && (
         <div className="detail-section">
-          <h4>Future Market Outlook</h4>
+          <h4><span className="section-icon">📈</span> Future Market Outlook</h4>
           <div className="outlook-row">
             <div className="outlook-cell">
               <div className="outlook-label">Job Growth</div>
@@ -214,19 +217,23 @@ export default function ScenarioCards({ ranked, total, onShowMore, showingAll }:
           <span className="list-meta">{ranked.length} of {total}</span>
         </div>
 
-        {ranked.map(item => {
+        {ranked.map((item, idx) => {
           const isSelected = item.scenario.id === selectedId
           const strong = item.tradeoff_entries.filter(e => e.score === 'strong').length
           const weak   = item.tradeoff_entries.filter(e => e.score === 'weak').length
+          const rankClass = RANK_CLASS[item.rank] || ''
 
           return (
             <button
               key={item.scenario.id}
               className={`scenario-card ${isSelected ? 'selected' : ''}`}
+              style={{ animationDelay: `${idx * 0.08}s` }}
               onClick={() => setSelectedId(item.scenario.id)}
             >
               <div className="card-top-row">
-                <span className="rank-badge">#{item.rank}</span>
+                <span className={`rank-badge ${rankClass}`}>
+                  {RANK_ICON[item.rank] || `#${item.rank}`}
+                </span>
                 <span className="scenario-name">{item.scenario.name}</span>
                 {item.monte_carlo && (
                   <span className="risk-chip" style={{ color: RISK_COLOR[item.monte_carlo.risk_label] }}>

@@ -230,9 +230,16 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app" style={phase === 'results' ? { maxWidth: 1100 } : undefined}>
+      {/* Ambient background */}
+      <div className="bg-decoration">
+        <div className="bg-orb bg-orb--1" />
+        <div className="bg-orb bg-orb--2" />
+        <div className="bg-orb bg-orb--3" />
+      </div>
+
       <header className="app-header">
-        <h1>Second Brain</h1>
+        <h1><span className="gradient-text">Second Brain</span></h1>
         <p className="tagline">AI-powered life-decision simulator</p>
       </header>
 
@@ -258,6 +265,24 @@ function App() {
             <div className="hero-card card">
               <h2>Make your next big decision with clarity</h2>
               <p>Describe your situation, and we'll simulate multiple realistic paths — ranked by outcomes, backed by research and Monte Carlo analysis.</p>
+              <div className="hero-features">
+                <div className="hero-feature">
+                  <div className="hero-feature-icon">🔬</div>
+                  <span>Web Research</span>
+                </div>
+                <div className="hero-feature">
+                  <div className="hero-feature-icon">📊</div>
+                  <span>Monte Carlo</span>
+                </div>
+                <div className="hero-feature">
+                  <div className="hero-feature-icon">⚖️</div>
+                  <span>Tradeoff Analysis</span>
+                </div>
+                <div className="hero-feature">
+                  <div className="hero-feature-icon">🎯</div>
+                  <span>Ranked Results</span>
+                </div>
+              </div>
               <button className="btn-primary" onClick={handleStart}>Get started →</button>
             </div>
           </div>
