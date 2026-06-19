@@ -1,4 +1,4 @@
-# Second Brain — AI Life Decision Simulator
+# PathFinder AI — AI Life Decision Simulator
 
 An AI-powered tool that helps you simulate major life decisions — career changes, education paths, relocation, and more — by combining web research, financial projections, Monte Carlo simulation, and tradeoff analysis into a ranked set of scenarios.
 

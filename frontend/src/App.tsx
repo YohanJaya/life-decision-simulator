@@ -22,7 +22,7 @@ interface PersistedSession {
   profileComplete: boolean
 }
 
-const STORAGE_KEY = 'second_brain_session'
+const STORAGE_KEY = 'pathfinder_ai_session'
 
 function saveToStorage(data: PersistedSession) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)) } catch { /* ignore */ }
@@ -239,7 +239,7 @@ function App() {
       </div>
 
       <header className="app-header">
-        <h1><span className="gradient-text">Second Brain</span></h1>
+        <h1><span className="gradient-text">PathFinder AI</span></h1>
         <p className="tagline">AI-powered life-decision simulator</p>
       </header>
 
