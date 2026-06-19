@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional
 
 from .base import BaseAgent, AgentOutput
@@ -48,7 +48,7 @@ compute the following all in annual USD:
 - starting_salary p25/p50/p75
 - five_year_cumulative_net (total income minus costs over 5 years)
 - debt_load (total debt if any education financing is involved, else 0)
-- break_even_years (years until cumulative net turns positive vs cheapest alternative, null if N/A)
+- break_even_years (a single number of years until cumulative net turns positive vs the cheapest alternative, e.g. 3.5; use null if N/A)
 
 Set confidence to "high" if you found direct data, "medium" if inferred, "low" if estimated.
 
@@ -59,7 +59,7 @@ Respond with ONLY valid JSON:
   "starting_salary_p75": {"label": "...", "value_usd": 0.0, "confidence": "high|medium|low", "source_rows": []},
   "five_year_cumulative_net": {"label": "...", "value_usd": 0.0, "confidence": "high|medium|low", "source_rows": []},
   "debt_load": {"label": "...", "value_usd": 0.0, "confidence": "high|medium|low", "source_rows": []},
-  "break_even_years": null,
+  "break_even_years": 3.5,
   "notes": ["<any caveats>"]
 }
 """
@@ -80,8 +80,27 @@ class _QuantRaw(BaseModel):
     starting_salary_p75: FinancialProjection
     five_year_cumulative_net: FinancialProjection
     debt_load: FinancialProjection
-    break_even_years: Optional[FinancialProjection] = None
+    break_even_years: Optional[float] = None
     notes: list[str] = []
+
+    @field_validator("break_even_years", mode="before")
+    @classmethod
+    def _coerce_break_even(cls, v):
+        """The LLM often wraps this as {"value": 5} or {"value_usd": 5}; accept a
+        bare number, a wrapped number, or null and reduce it to a plain float."""
+        if v is None:
+            return None
+        if isinstance(v, dict):
+            for key in ("value", "years", "value_usd"):
+                if v.get(key) is not None:
+                    v = v[key]
+                    break
+            else:
+                return None
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return None
 
 
 class ResearchOutput(AgentOutput):

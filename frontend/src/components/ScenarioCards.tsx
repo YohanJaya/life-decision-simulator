@@ -99,8 +99,8 @@ function DetailPanel({ item }: { item: RankedScenario }) {
                 <div className="fin-mid" style={{ color: 'var(--red)' }}>
                   {fmt(quant.debt_load.value_usd)}
                 </div>
-                {quant.break_even_years && (
-                  <div className="fin-sublabel">Break-even: {fmt(quant.break_even_years.value_usd)}yr</div>
+                {quant.break_even_years != null && (
+                  <div className="fin-sublabel">Break-even: {quant.break_even_years.toFixed(1)}yr</div>
                 )}
               </div>
             )}

@@ -48,7 +48,7 @@ export interface QuantResult {
   starting_salary_p75: FinancialProjection
   five_year_cumulative_net: FinancialProjection
   debt_load: FinancialProjection
-  break_even_years: FinancialProjection | null
+  break_even_years: number | null
   notes: string[]
 }
 

@@ -58,7 +58,7 @@ class QuantResult(BaseModel):
     starting_salary_p75: FinancialProjection
     five_year_cumulative_net: FinancialProjection
     debt_load: FinancialProjection
-    break_even_years: Optional[FinancialProjection] = None
+    break_even_years: Optional[float] = None   # count of years, not a USD figure
     notes: list[str] = []
 
 
