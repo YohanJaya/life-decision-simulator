@@ -10,7 +10,7 @@ import pytest
 
 from app.schemas import FinancialProjection, MarketOutlook, QuantResult
 from app.simulation import simulate_all
-from app.simulation.monte_carlo import N_SIMULATIONS, simulate
+from app.simulation.monte_carlo import N_SIMULATIONS, SAMPLE_PATHS, simulate
 
 
 # ── Fixtures / factories ──────────────────────────────────────────────────────
@@ -99,6 +99,14 @@ def test_result_shape_and_invariants():
     assert [y.year for y in result.yearly] == [1, 2, 3, 4, 5]
     for y in result.yearly:
         assert y.p10 <= y.p25 <= y.p50 <= y.p75 <= y.p90
+
+    # Visualization sample: SAMPLE_PATHS cumulative trajectories, one point per year,
+    # stratified so they arrive sorted by final value and span the p10–p90 envelope.
+    assert len(result.sample_paths) == SAMPLE_PATHS
+    assert all(len(p) == 5 for p in result.sample_paths)
+    finals = [p[-1] for p in result.sample_paths]
+    assert finals == sorted(finals)
+    assert finals[0] <= result.cumulative_net_p50 <= finals[-1]
 
 
 @pytest.mark.parametrize("horizon", [1, 3, 10])

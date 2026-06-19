@@ -100,6 +100,7 @@ export interface MonteCarloResult {
   upside_potential_usd: number
   yearly: YearlyDistribution[]
   risk_label: 'low' | 'medium' | 'high'
+  sample_paths: number[][]
 }
 
 export interface MarketOutlook {

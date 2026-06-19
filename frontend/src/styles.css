@@ -321,6 +321,14 @@ textarea { resize: vertical; }
 .notes-list  { font-size: 0.82rem; color: var(--muted); padding-left: 1.2rem; line-height: 1.8; }
 
 /* Monte Carlo */
+.mc-chart       { margin-bottom: 0.85rem; }
+.mc-chart-wrap  { position: relative; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; }
+.mc-chart-canvas { display: block; width: 100%; }
+.mc-chart-hint  { position: absolute; top: 6px; right: 8px; font-size: 0.68rem; color: var(--muted); opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.mc-chart-wrap:hover .mc-chart-hint { opacity: 0.8; }
+.mc-legend      { display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem; margin-top: 0.5rem; font-size: 0.74rem; color: var(--muted); }
+.mc-legend .mc-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.3rem; vertical-align: middle; }
+.mc-legend-note { margin-left: auto; font-style: italic; }
 .mc-stats    { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 0.75rem; }
 .mc-stat     { background: var(--bg); border-radius: var(--radius); padding: 0.75rem; text-align: center; }
 .mc-stat-val { display: block; font-size: 1.1rem; font-weight: 700; }

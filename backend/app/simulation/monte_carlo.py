@@ -12,6 +12,10 @@ from ..schemas import (
 
 N_SIMULATIONS = 5_000
 
+# How many cumulative trajectories to ship to the frontend for the animated fan chart.
+# A stratified slice of all N_SIMULATIONS — enough to read as a dense fan, light on the wire.
+SAMPLE_PATHS = 60
+
 # Growth rate ranges (low, high) per projected_growth label
 _GROWTH_RANGES: dict[str, tuple[float, float]] = {
     "much_faster": (0.06, 0.14),
@@ -135,6 +139,26 @@ def _build_yearly_distributions(
     return distributions
 
 
+def _stratified_sample_paths(all_yearly: list[list[float]], k: int) -> list[list[float]]:
+    """Pick k simulations spread evenly across the final-value distribution and return
+    their cumulative-net trajectories. Stratifying by outcome (rather than sampling at
+    random) keeps the rendered fan's envelope aligned with the p10/p50/p90 spread and
+    guarantees both tails are represented."""
+    order = sorted(range(len(all_yearly)), key=lambda i: sum(all_yearly[i]))
+    if len(order) > k:
+        step = (len(order) - 1) / (k - 1)
+        order = [order[round(i * step)] for i in range(k)]
+
+    paths: list[list[float]] = []
+    for i in order:
+        running, total = [], 0.0
+        for net in all_yearly[i]:
+            total += net
+            running.append(round(total, 2))
+        paths.append(running)
+    return paths
+
+
 def _risk_label(prob_positive: float, downside: float, p50: float) -> Literal["low", "medium", "high"]:
     downside_ratio = abs(downside) / max(abs(p50), 1)
     if prob_positive >= 0.85 and downside_ratio < 0.3:
@@ -186,6 +210,7 @@ def simulate(
         upside_potential_usd=round(upside_potential, 2),
         yearly=_build_yearly_distributions(all_yearly, time_horizon),
         risk_label=_risk_label(prob_positive, downside_risk, p50),
+        sample_paths=_stratified_sample_paths(all_yearly, SAMPLE_PATHS),
     )
 
 

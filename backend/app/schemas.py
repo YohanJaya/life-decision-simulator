@@ -100,6 +100,10 @@ class MonteCarloResult(BaseModel):
     upside_potential_usd: float     # p90 - p50
     yearly: list[YearlyDistribution]
     risk_label: Literal["low", "medium", "high"]
+    # Representative subset of cumulative-net trajectories for visualization.
+    # Each path is the running cumulative net per year; stratified by final value
+    # so the on-screen fan spans the full p0–p100 spread, not all N_SIMULATIONS.
+    sample_paths: list[list[float]] = []
 
 
 # ── Market Outlook ────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { RankedScenario, TradeoffScore } from '../types'
+import MonteCarloChart from './MonteCarloChart'
 
 interface Props {
   ranked: RankedScenario[]
@@ -119,13 +120,7 @@ function DetailPanel({ item }: { item: RankedScenario }) {
             Monte Carlo Distribution
             <span className="section-meta">{mc.n_simulations.toLocaleString()} simulations</span>
           </h4>
-          <div className="mc-bar-wrap">
-            <span className="mc-bar-label">p10</span>
-            <div className="mc-bar">
-              <div className="mc-range" />
-            </div>
-            <span className="mc-bar-label">p90</span>
-          </div>
+          <MonteCarloChart mc={mc} />
           <div className="mc-stats">
             <div className="mc-stat">
               <span className="mc-stat-val" style={{ color: 'var(--red)' }}>{fmt(mc.cumulative_net_p10)}</span>
